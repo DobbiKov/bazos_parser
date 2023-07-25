@@ -47,18 +47,6 @@ More info here: {i.link}")
     except Exception as err:
         bot.send_message(message.chat.id, f"Something went wrong. {err}")
         
-@bot.message_handler(commands=['find_by_link'])
-def find_by_link_command(message):
-    try:
-        link = message.text.split("/find_by_link ")[-1]
-        announces: list[Announce] = parse_search_site(link)
-        for i in announces:
-            bot.send_photo(message.chat.id, i.image_link, f"Title: {i.name}\n\
-Price: {i.price}\n\
-Located in: {i.location}\n\n\
-More info here: {i.link}")
-    except:
-        bot.send_message(message.chat.id, "Something went wrong.")
 
 bot.polling()
 # if __name__ == "__main__":
