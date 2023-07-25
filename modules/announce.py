@@ -5,3 +5,10 @@ class Announce:
         self.price = price
         self.location = location
         self.image_link = image_link
+
+    def print(self):
+        print(self.name)
+        print(self.link)
+        print(self.price)
+        print(self.location)
+        print(self.image_link)

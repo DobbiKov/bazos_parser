@@ -1,5 +1,3 @@
-strankovani
-
 import bs4, requests
 from .announce import Announce
 
