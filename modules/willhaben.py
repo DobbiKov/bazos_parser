@@ -2,7 +2,6 @@ import time
 from bs4 import BeautifulSoup
 import requests
 from lxml import etree
-from selenium import webdriver
 
 from modules.announce import Announce
 
@@ -13,13 +12,11 @@ HEADERS = ({'User-Agent':
 
 phone_url = "/iad/kaufen-und-verkaufen/d/"
 
-firefox_options = webdriver.FirefoxOptions()
-firefox_options.add_argument("--headless")
-firefox_options.add_argument("--window-size=1920,1080")
+
 
 class Willhaben:
-    def __init__(self):
-        self.browser = webdriver.Firefox(options=firefox_options)
+    def __init__(self, browser):
+        self.browser = browser
         self.browser.maximize_window()
 
     def parse_link(self, link) -> list[Announce]:
@@ -88,3 +85,13 @@ class Willhaben:
         
         driver.close()
         return urls[3::]
+    
+    def generate_link_by_category(self, category, request):
+        request = request.replace(" ", "%20")
+        if category == "phones":
+            return "https://www.willhaben.at/iad/kaufen-und-verkaufen/marktplatz/smartphones-handys-2722?sfId=610a8d40-20b9-416d-bdc8-d7387616eb8a&isNavigation=true&keyword=" + request
+        if category == "laptops":
+            return "https://www.willhaben.at/iad/kaufen-und-verkaufen/marktplatz/computer-tablets-5828?sfId=19c08a04-cdde-4ac3-9907-606598efba8c&isNavigation=true&keyword=" + request
+        if category == "gpus":
+            return "https://www.willhaben.at/iad/kaufen-und-verkaufen/marktplatz/pc-komponenten/grafikkarten-5882?sfId=ac3d5d75-760b-4728-a86e-52f83435e00a&rows=30&isNavigation=true&keyword=" + request
+        return Exception("You used the wrong category")

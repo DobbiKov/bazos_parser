@@ -19,3 +19,15 @@ def parse_search_site(link: str) -> list:
         announce = Announce(laptop_name, laptop_link, laptop_price, laptop_location, laptop_image_link)
         announces.append(announce)
     return announces
+
+def generate_bazos_search_link(category, request) -> str:
+    if category == "phones":
+        request = request.replace(" ", "-")
+        return "https://mobil.bazos.cz/inzeraty/" + request + "/"
+    if category == "laptops":
+        request = request.replace(" ", "+")
+        return "https://pc.bazos.cz/notebook/?hledat=" + request + "&rubriky=pc&hlokalita=&humkreis=&cenaod=&cenado=&Submit=Hledat&order=&kitx=ano"
+    if category == "gpus":
+        request = request.replace(" ", "+")
+        return "https://pc.bazos.cz/graficka/?hledat=" + request + "&rubriky=pc&hlokalita=&humkreis=25&cenaod=&cenado=&Submit=Hledat&order=&kitx=ano"
+    return Exception("You used the wrong category")
