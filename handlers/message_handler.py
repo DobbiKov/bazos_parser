@@ -23,7 +23,7 @@ async def message_handler(message: types.Message, state: FSMContext):
                 announces = willhaben.parse_link(link)
 
             if len(announces) == 0:
-                await dp.bot.send_message(call.message.chat.id, "No results :(")
+                await dp.bot.send_message(message.chat.id, "No results :(")
                 return
             for i in announces:
                 await i.send_announce_to_chat(dp.bot, message.chat.id)
