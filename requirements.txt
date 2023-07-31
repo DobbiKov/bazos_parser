@@ -4,3 +4,4 @@ PyTelegramBotApi
 lxml
 aiogram
 asyncio
+loguru

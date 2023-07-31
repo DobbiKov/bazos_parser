@@ -2,8 +2,13 @@ import time
 from bs4 import BeautifulSoup
 import requests
 from lxml import etree
+from selenium.webdriver import Firefox
+import pickle
 
 from modules.announce import Announce
+from modules.add_announce import AddAnnounce
+
+from loader import logger
 
 HEADERS = ({'User-Agent':
             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
@@ -16,14 +21,183 @@ phone_url = "/iad/kaufen-und-verkaufen/d/"
 
 class Willhaben:
     def __init__(self, browser):
-        self.browser = browser
+        self.browser: Firefox = browser
         self.browser.maximize_window()
+        self.is_cookies_loaded = False
+
+        try:
+            cookies = pickle.load(open("cookies.pkl", "rb"))
+            self.browser.get("https://willhaben.at")
+            for cookie in cookies:
+                self.browser.add_cookie(cookie)
+            self.browser.get("https://willhaben.at")
+            logger.info("The cookies have been loaded to the browser!")
+            self.is_cookies_loaded = True
+        except Exception as er:
+            logger.error(f"Couldn't load cookies. {er}")
+        
+        self.accept_cookies()
+
+    def login(self):
+        pass
+
+    def add_announce(self, announce: AddAnnounce):
+        self.browser.get("https://willhaben.at/iad/anzeigenaufgabe/marktplatz?adTypeId=67&productId=67")
+
+        # price
+        price_input = self.browser.find_element(by="id", value="price")
+        price_input.clear()
+        price_input.send_keys(announce.price)
+
+        # title
+        title_input = self.browser.find_element("xpath", '//*[@id="heading"]')
+        title_input.clear()
+        title_input.send_keys(announce.title)
+
+        # category
+        category_button = self.browser.find_element('xpath', '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/div/div[4]/div/div/div/div/div/button')
+        category_button.click()
+
+        if announce.category == "gpus":
+            pcs_button = self.browser.find_element('xpath', '/html/body/div[5]/div/div/div[3]/div[2]/button[6]')
+            pcs_button.click()
+
+            pc_components_button = self.browser.find_element('xpath', '/html/body/div[5]/div/div/div[3]/div[2]/button[7]')
+            pc_components_button.click()
+
+            gpus_button = self.browser.find_element('xpath', '/html/body/div[5]/div/div/div[3]/div[2]/button[4]')
+            gpus_button.click()
+
+        if announce.category == "laptops":
+            pcs_button = self.browser.find_element('xpath', '/html/body/div[5]/div/div/div[3]/div[2]/button[6]')
+            pcs_button.click()
+
+            computers_button = self.browser.find_element('xpath', '/html/body/div[5]/div/div/div[3]/div[2]/button[2]')
+            computers_button.click()
+
+            laptops_button = self.browser.find_element('xpath', '/html/body/div[5]/div/div/div[3]/div[2]/button[4]')
+            laptops_button.click()
+
+            brands = {
+                'acer': 1,
+                'apple': 2,
+                'asus': 3,
+                'dell': 4,
+                'fujitsu': 5,
+                'hp': 6,
+                'huawei': 7,
+                'lenovo': 8,
+                'microsoft': 10,
+                'samsung': 11,
+                'sony': 12,
+            }
+
+            laptop_brand_button = self.browser.find_element('xpath', f'/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/div/div[4]/div[2]/div/div/div/div/div/div[{brands[announce.laptop_brand]}]/div')
+            laptop_brand_button.click()
+            
+            inches = {
+                'less11inches': 1,
+                '12inches': 2,
+                '13inches': 3,
+                '14inches': 4,
+                '15inches': 5,
+                '16inches': 6,
+                '17inches': 7,
+                'more18inches': 8,
+            }
+            # 
+            laptop_inches_button = self.browser.find_element('xpath', f'/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/div/div[4]/div[3]/div/div/div/div/div[{inches[announce.laptop_inches]}]/div')
+            laptop_inches_button.click()
+
+        if announce.category == "phones":
+            phones_button = self.browser.find_element('xpath', '/html/body/div[5]/div/div/div[3]/div[2]/button[13]')
+            phones_button.click()
+
+            smartphones_button = self.browser.find_element('xpath', '/html/body/div[5]/div/div/div[3]/div[2]/button[2]')
+            smartphones_button.click()
+
+            phone_brands = {
+                'alcatel': 1,
+                'apple': 2,
+                'huawei': 5,
+                'motorola': 8,
+                'nokia': 9,
+                'oneplus': 10,
+                'samsung': 11,
+                'sony': 12,
+                'xiaomi': 14,
+                'other': 15,
+            }
+            phone_brand_button = self.browser.find_element('xpath', f'/html/body/div[5]/div/div/div[3]/div[2]/button[{phone_brands[announce.phone_brand]}]')
+            phone_brand_button.click()
+
+            gbs = {
+                'more512gb': 1,
+                '256gb': 2,
+                '128gb': 3,
+                '64gb': 4,
+                '32gb': 5,
+                '16gb': 6,
+                'less8gb': 7,
+            }
+            phone_gbs = self.browser.find_element('xpath', f'/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/div/div[4]/div[2]/div/div/div/div/div[{gbs[announce.phone_gbs]}]/div')
+            phone_gbs.click()
+
+            unblocked = {
+                'yes': 1,
+                'no': 2,
+            }
+            unblocked_button = self.browser.find_element('xpath', f'/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/div/div[4]/div[3]/div/div/div/div/div[{unblocked[announce.phone_unblocked]}]/div')
+            unblocked_button.click()
+            
+        # description
+        time.sleep(1)
+
+        description_input = self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/div/div[5]/div/div/div/div[2]/div/div/div[1]')
+        # description_input.clear()
+        description_input.click()
+        description_input.send_keys(announce.description)
+
+        time.sleep(1)
+
+        country_select = self.browser.find_element("xpath", '//*[@id="country"]')
+        country_select.click()
+
+        if announce.location == "poland":
+            poland_option =  self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/details/div/div[2]/div[1]/div/div/select/option[3]')
+            poland_option.click()
+        if announce.location == "czech":
+            czech_option =  self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/details/div/div[2]/div[1]/div/div/select/option[44]')
+            czech_option.click()
+        if announce.location == "ukraine":
+            ukraine_option =  self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/details/div/div[2]/div[1]/div/div/select/option[46]')
+            ukraine_option.click()
+
+        post_index_input = self.browser.find_element(by="xpath", value='//*[@id="postCode"]')
+        post_index_input.clear()
+        post_index_input.send_keys(announce.post_index)
+
+        # description_input = self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/div/div[5]/div/div/div/div[2]/div/div/div[1]/p')
+        # description_input
+
+
+    def browser_save_cookies(self):
+        cookies = self.browser.get_cookies()
+        pickle.dump(cookies, open("cookies.pkl", "wb"))
 
     def parse_link(self, link) -> list[Announce]:
         links = self.parse_hrefs_from_link(link)
         announces = [self.parse_phone_link(i) for i in links]
         return announces
-
+    
+    def accept_cookies(self) -> bool:
+        try:
+            button = self.browser.find_element(by="xpath", value='//*[@id="didomi-notice-agree-button"]')
+            button.click()
+            return True
+        except:
+            return False
+            logger.info("The cookies button wasn't found.")
     def parse_phone_link(self, phone_link: str) -> Announce:
         html = requests.get(phone_link, headers=HEADERS).text
 
@@ -63,8 +237,7 @@ class Willhaben:
 
         time.sleep(5)
 
-        button = driver.find_element(by="xpath", value='//*[@id="didomi-notice-agree-button"]')
-        button.click()
+        self.accept_cookies()
 
         time.sleep(3)
 
@@ -83,7 +256,6 @@ class Willhaben:
                 continue
             urls.append(href)
         
-        driver.close()
         return urls[3::]
     
     def generate_link_by_category(self, category, request):

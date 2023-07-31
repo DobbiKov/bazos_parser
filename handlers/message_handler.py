@@ -2,18 +2,19 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from keyboards.inline.search_choose_category import search_choose_category
 
-from loader import dp, browser
+from loader import dp, willhaben, logger
 from modules.announce import Announce
-from modules.willhaben import Willhaben
+# from modules.willhaben import Willhaben
 from modules.bazos import parse_search_site
 
 @dp.message_handler(state="*")
 async def message_handler(message: types.Message, state: FSMContext):
     if message.text.startswith("https://"):
         try:
-            willhaben = Willhaben(browser)
             link = message.text
             announces: list[Announce] = []
+
+            logger.info(f"[Search]: User(id: {message.from_user.id}){message.from_user.full_name} got a search request: {message.text}")
 
             if "bazos" in message.text:
                 await dp.bot.send_message(message.chat.id, f"The process of parsing has been started. Please, wait.")
@@ -30,6 +31,8 @@ async def message_handler(message: types.Message, state: FSMContext):
             return 
         except Exception as err:
             return await dp.bot.send_message(message.chat.id, f"Something went wrong. {err}")
+    
+    logger.info(f"[Search]: User(id: {message.from_user.id}){message.from_user.full_name} got a search request: {message.text}")
     
     text = message.text
     async with state.proxy() as data:

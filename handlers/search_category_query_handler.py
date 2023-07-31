@@ -2,9 +2,9 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery
 
-from loader import dp, browser
+from loader import dp, willhaben
 from modules.announce import Announce
-from modules.willhaben import Willhaben
+# from modules.willhaben import Willhaben
 from modules.bazos import generate_bazos_search_link, parse_search_site
 
 
@@ -12,7 +12,6 @@ from modules.bazos import generate_bazos_search_link, parse_search_site
 async def callback_query_handler(call: CallbackQuery, state: FSMContext):
     await call.answer("Working...")
     category = call.data.split(":")[-1]
-    willhaben = Willhaben(browser)
     request = ""
 
     async with state.proxy() as data:

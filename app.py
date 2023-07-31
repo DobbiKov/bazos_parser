@@ -1,6 +1,6 @@
 from aiogram import executor
 
-from loader import dp
+from loader import dp, logger
 import handlers
 # from utils.notify_admins import on_startup_notify
 # from utils.set_bot_commands import set_default_commands
@@ -12,7 +12,7 @@ async def on_startup(dispatcher):
 
     # Уведомляет про запуск
     # await on_startup_notify(dispatcher)
-    print("The bot has been started!")
+    logger.info("The bot has been started!")
 
 
 if __name__ == '__main__':
