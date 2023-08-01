@@ -5,3 +5,4 @@ lxml
 aiogram
 asyncio
 loguru
+Pillow

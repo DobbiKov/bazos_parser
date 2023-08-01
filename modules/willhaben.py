@@ -9,6 +9,7 @@ from modules.announce import Announce
 from modules.add_announce import AddAnnounce
 
 from loader import logger
+import os
 
 HEADERS = ({'User-Agent':
             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
@@ -41,7 +42,7 @@ class Willhaben:
     def login(self):
         pass
 
-    def add_announce(self, announce: AddAnnounce):
+    def add_announce(self, announce: AddAnnounce) -> str:
         self.browser.get("https://willhaben.at/iad/anzeigenaufgabe/marktplatz?adTypeId=67&productId=67")
 
         # price
@@ -160,8 +161,15 @@ class Willhaben:
 
         time.sleep(1)
 
-        country_select = self.browser.find_element("xpath", '//*[@id="country"]')
-        country_select.click()
+        try:
+            country_select = self.browser.find_element("xpath", '//*[@id="country"]')
+            country_select.click()
+        except:
+            open_contact_button = self.browser.find_element('xpath', '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/details/summary/div')
+            open_contact_button.click()
+
+            country_select = self.browser.find_element("xpath", '//*[@id="country"]')
+            country_select.click()
 
         if announce.location == "poland":
             poland_option =  self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/details/div/div[2]/div[1]/div/div/select/option[3]')
@@ -177,9 +185,58 @@ class Willhaben:
         post_index_input.clear()
         post_index_input.send_keys(announce.post_index)
 
-        # description_input = self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/div/div[5]/div/div/div/div[2]/div/div/div[1]/p')
-        # description_input
+        time.sleep(2)
 
+        pictures = self.get_files_by_user_id(announce.user_id)
+
+        for i in pictures:
+        # photo_input = self.browser.find_element("xpath", "/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[1]/div/div[1]/div/div")
+            photo_input = self.browser.find_element("xpath", '//*[@id="imagePicker"]')
+            photo_input.send_keys(i)
+
+        time.sleep(1)
+
+
+        next_button = self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/form/fieldset/div/div[2]/button[2]')
+        next_button.click()
+        time.sleep(5)
+        try:
+            next_button = self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/div/form/div[2]/button[2]')
+            next_button.click()
+        except:
+            time.sleep(5)
+            next_button = self.browser.find_element("xpath", '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/div/form/div[2]/button[2]')
+            next_button.click()
+
+        time.sleep(3)
+
+        publish_button = self.browser.find_element('xpath', '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/div[5]/button[2]')
+        publish_button.click()
+
+        time.sleep(3)
+
+        announce_link_div = self.browser.find_element('xpath', '/html/body/div[2]/div[1]/div[2]/div[1]/div/div[1]/div[4]/div/div/div[3]/div[1]/div[2]/div[1]/div[1]/a')
+        url = announce_link_div.get_attribute('href')
+
+        for i in pictures:
+            os.remove(i)
+
+        return url
+
+    def get_files_by_user_id(self, user_id) -> list[str]:
+        dir_path = f'./pictures/{user_id}'
+
+        # list to store files
+        res = []
+
+        # Iterate directory
+        for file_path in os.listdir(dir_path):
+            # check if current file_path is a file
+            if os.path.isfile(os.path.join(dir_path, file_path)) and file_path.endswith("png"):
+                # add filename to list
+                abs_path = os.path.abspath(file_path).split(file_path)[0] + dir_path + "/" + file_path
+                res.append(abs_path)
+        return res
 
     def browser_save_cookies(self):
         cookies = self.browser.get_cookies()

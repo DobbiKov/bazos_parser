@@ -8,6 +8,8 @@ from modules.add_announce import AddAnnounce
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.filters import Text
 from aiogram.types import CallbackQuery
+from typing import List
+import os
 
 class AddAnnounceForm(StatesGroup):
     title = State()
@@ -163,10 +165,22 @@ async def process_name(message: types.Message, state: FSMContext):
     return await message.reply("Write a post index(digits only):")
 
 @dp.message_handler(lambda message: message.text.isdigit(), state=AddAnnounceForm.post_index)
-async def process_name(message: types.Message, state: FSMContext):
+async def process_post_index(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['post_index'] = message.text
-        announce = AddAnnounce(data['title'], "", data['price'], data['country'], [""], data['description'], data['category'], data['post_index'])
+        await AddAnnounceForm.next()
+    await message.answer("Send me announce photos:")
+
+@dp.message_handler(is_media_group=True, content_types=types.ContentTypes.PHOTO, state=AddAnnounceForm.photos)
+async def process_photos(message: types.Message, album: List[types.Message], state: FSMContext):
+    photo_ids = []
+    for i in album:
+        if not i.photo:
+            continue
+        photo_ids.append(i.photo[-1].file_id)
+    photos_paths = await save_photos(message.from_user.id, photo_ids)
+    async with state.proxy() as data:
+        announce = AddAnnounce(message.from_user.id, data['title'], "", data['price'], data['country'], photos_paths, data['description'], data['category'], data['post_index'])
         if data['category'] == "laptops":
             announce.laptop_brand = data['laptop_brand']
             announce.laptop_inches = data['laptop_inches']
@@ -180,3 +194,39 @@ async def process_name(message: types.Message, state: FSMContext):
         willhaben.add_announce(announce)
         await message.reply("Congrats! You've added an announce!")
     await state.finish()
+
+
+@dp.message_handler(content_types=types.ContentTypes.PHOTO, state=AddAnnounceForm.photos)
+async def process_photo(message: types.Message, state: FSMContext):
+    photo_ids = []
+    photo_ids.append(message.photo[-1].file_id)
+    photos_paths = await save_photos(message.from_user.id, photo_ids)
+    async with state.proxy() as data:
+        announce = AddAnnounce(message.from_user.id, data['title'], "", data['price'], data['country'], photos_paths, data['description'], data['category'], data['post_index'])
+        if data['category'] == "laptops":
+            announce.laptop_brand = data['laptop_brand']
+            announce.laptop_inches = data['laptop_inches']
+
+        if data['category'] == "phones":
+            announce.phone_brand = data['phone_brand']
+            announce.phone_gbs = data['phone_gbs']
+            announce.phone_unblocked = data['phone_unblocked']
+
+        # announce.print()
+        announce_link = willhaben.add_announce(announce)
+        await message.reply(f"Congrats! You've added an announce!\n\
+Here is your link: {announce_link}")
+    await state.finish()
+
+async def save_photos(user_id, photo_ids: list) -> list[str]:
+    photo_paths = []
+    if not os.path.exists(f"./pictures/{user_id}"):
+        os.mkdir(f"./pictures/{user_id}")
+    for i in photo_ids:
+        file = await dp.bot.get_file(i)
+        file_path = file.file_path  
+        src = "./pictures/" + str(user_id) + "/" + str(i) + ".png" 
+        download_file = await dp.bot.download_file(file_path, src) 
+        photo_paths.append(src)
+    return photo_paths
+

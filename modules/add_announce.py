@@ -1,5 +1,5 @@
 class AddAnnounce:
-    def __init__(self, title: str, link: str, price: str, location: str, image_links: [str], description: str, category: str, post_index: str):
+    def __init__(self, user_id, title: str, link: str, price: str, location: str, image_links: [str], description: str, category: str, post_index: str):
         self.title = title
         self.link = link
         self.price = price
@@ -8,6 +8,8 @@ class AddAnnounce:
         self.description = description
         self.category = category
         self.post_index = post_index
+
+        self.user_id = user_id
 
         self.laptop_brand = ""
         self.laptop_inches = ""
