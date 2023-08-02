@@ -26,6 +26,7 @@ class AddAnnounceForm(StatesGroup):
 async def add_announce_command(message: types.Message, state: FSMContext):
     # add_announce = AddAnnounce("oneplus 8", "", "1000", "fdsafads", "dsfafasd", "Oneplus бери не хочу")
     # willhaben.add_announce(add_announce)
+    logger.info(f"[AddAnnounce]: User(id: {message.from_user.id}){message.from_user.full_name} is going to add an announce: {message.text}")
     await AddAnnounceForm.title.set()
     await dp.bot.send_message(message.chat.id, "Enter the title of the announce:")
 
@@ -178,9 +179,8 @@ async def process_photos(message: types.Message, album: List[types.Message], sta
         if not i.photo:
             continue
         photo_ids.append(i.photo[-1].file_id)
-    photos_paths = await save_photos(message.from_user.id, photo_ids)
     async with state.proxy() as data:
-        announce = AddAnnounce(message.from_user.id, data['title'], "", data['price'], data['country'], photos_paths, data['description'], data['category'], data['post_index'])
+        announce = AddAnnounce(message.from_user.id, data['title'], "", data['price'], data['country'], data['description'], data['category'], data['post_index'])
         if data['category'] == "laptops":
             announce.laptop_brand = data['laptop_brand']
             announce.laptop_inches = data['laptop_inches']
@@ -200,9 +200,8 @@ async def process_photos(message: types.Message, album: List[types.Message], sta
 async def process_photo(message: types.Message, state: FSMContext):
     photo_ids = []
     photo_ids.append(message.photo[-1].file_id)
-    photos_paths = await save_photos(message.from_user.id, photo_ids)
     async with state.proxy() as data:
-        announce = AddAnnounce(message.from_user.id, data['title'], "", data['price'], data['country'], photos_paths, data['description'], data['category'], data['post_index'])
+        announce = AddAnnounce(message.from_user.id, data['title'], "", data['price'], data['country'], data['description'], data['category'], data['post_index'])
         if data['category'] == "laptops":
             announce.laptop_brand = data['laptop_brand']
             announce.laptop_inches = data['laptop_inches']
@@ -217,16 +216,4 @@ async def process_photo(message: types.Message, state: FSMContext):
         await message.reply(f"Congrats! You've added an announce!\n\
 Here is your link: {announce_link}")
     await state.finish()
-
-async def save_photos(user_id, photo_ids: list) -> list[str]:
-    photo_paths = []
-    if not os.path.exists(f"./pictures/{user_id}"):
-        os.mkdir(f"./pictures/{user_id}")
-    for i in photo_ids:
-        file = await dp.bot.get_file(i)
-        file_path = file.file_path  
-        src = "./pictures/" + str(user_id) + "/" + str(i) + ".png" 
-        download_file = await dp.bot.download_file(file_path, src) 
-        photo_paths.append(src)
-    return photo_paths
 

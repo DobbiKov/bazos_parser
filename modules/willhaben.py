@@ -226,14 +226,10 @@ class Willhaben:
     def get_files_by_user_id(self, user_id) -> list[str]:
         dir_path = f'./pictures/{user_id}'
 
-        # list to store files
         res = []
 
-        # Iterate directory
         for file_path in os.listdir(dir_path):
-            # check if current file_path is a file
             if os.path.isfile(os.path.join(dir_path, file_path)) and file_path.endswith("png"):
-                # add filename to list
                 abs_path = os.path.abspath(file_path).split(file_path)[0] + dir_path + "/" + file_path
                 res.append(abs_path)
         return res
@@ -253,8 +249,9 @@ class Willhaben:
             button.click()
             return True
         except:
-            return False
             logger.info("The cookies button wasn't found.")
+            return False
+        
     def parse_phone_link(self, phone_link: str) -> Announce:
         html = requests.get(phone_link, headers=HEADERS).text
 
